@@ -65,8 +65,4 @@ exec geth \
 	--authrpc.vhosts="*" \
 	--authrpc.jwtsecret=/config/jwt-secret.txt \
 	--gcmode=archive \
-	--authrpc.addr="0.0.0.0" \
-	--authrpc.port="8551" \
-	--authrpc.vhosts="*" \
-	--authrpc.jwtsecret=/config/jwt-secret.txt \
 	"$@"
