@@ -1,4 +1,4 @@
-name: op-batcher image
+name: build-images
 
 on:
   push:
@@ -10,9 +10,6 @@ on:
   workflow_dispatch: {}
   workflow_call:
 
-env:
-  IMAGE_NAME: gcr.io/op-batcher
-
 jobs:
   container:
     runs-on: ubuntu-latest
@@ -22,6 +19,27 @@ jobs:
       packages: write
       contents: read
     timeout-minutes: 60
+    strategy:
+      matrix:
+        include:
+          - IMAGE_NAME: "gcr.io/op-batcher"
+            DOCKERFILE: "./op-batcher/Dockerfile"
+            CONTEXT: "./"
+          - IMAGE_NAME: "gcr.io/op-node-devnet"
+            DOCKERFILE: "./op-node/Dockerfile.devnet"
+            CONTEXT: "./"
+          - IMAGE_NAME: "gcr.io/op-node"
+            DOCKERFILE: "./op-node/Dockerfile"
+            CONTEXT: "./"
+          - IMAGE_NAME: "gcr.io/op-proposer"
+            DOCKERFILE: "./op-proposer/Dockerfile"
+            CONTEXT: "./"
+          - IMAGE_NAME: "gcr.io/optimisml1"
+            DOCKERFILE: "./ops-bedrock/Dockerfile.l1"
+            CONTEXT: "./ops-bedrock"
+          - IMAGE_NAME: "gcr.io/optimisml2"
+            DOCKERFILE: "./ops-bedrock/Dockerfile.l2"
+            CONTEXT: "./ops-bedrock"
 
     steps:
       - name: Checkout repository
@@ -66,7 +84,15 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ matrix.IMAGE_NAME }}
+
+      - name: SemVer
+        id: semver
+        uses: paulhatch/semantic-version@v5.0.2
+        with:
+          tag_prefix: "v"
+          major_pattern: "(MAJOR)"
+          minor_pattern: "(MINOR)"
 
       # If the job is triggered via workflow dispatch and on a master branch, tag branch and latest
       # Otherwise, just tag as the branch name
@@ -74,7 +100,7 @@ jobs:
         id: docker_tagging
         run: |
           echo "manual trigger from master/main branch, assigning latest tag"
-          echo "::set-output name=docker_tags::${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${GITHUB_REF##*/},${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          echo "::set-output name=docker_tags::${{ env.REGISTRY }}/${{ matrix.IMAGE_NAME }}:${GITHUB_REF##*/},${{ env.REGISTRY }}/${{ matrix.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/${{ matrix.IMAGE_NAME }}:${{ steps.semver.outputs.version_tag }}"
       # Log docker metadata to explicitly know what is being pushed
       - name: Inspect Docker Metadata
         run: |
@@ -86,9 +112,9 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v3.1.1
         with:
-          context: ./
+          context: ${{ matrix.CONTEXT }}
           push: true
-          file: ./op-batcher/Dockerfile
+          file: ${{ matrix.DOCKERFILE }}
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.docker_tagging.outputs.docker_tags }}
           labels: ${{ steps.meta.outputs.labels }}
