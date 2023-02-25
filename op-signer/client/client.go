@@ -27,6 +27,7 @@ type SignerClient struct {
 func NewSignerClient(logger log.Logger, endpoint string, tlsConfig optls.CLIConfig) (*SignerClient, error) {
 	var httpClient *http.Client
 	if tlsConfig.TLSCaCert != "" {
+		logger.Info("tlsConfig specified, loading tls config")
 		caCert, err := os.ReadFile(tlsConfig.TLSCaCert)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read tls.ca: %w", err)
@@ -57,6 +58,7 @@ func NewSignerClient(logger log.Logger, endpoint string, tlsConfig optls.CLIConf
 			},
 		}
 	} else {
+		logger.Info("no tlsConfig specified, using default http client")
 		httpClient = http.DefaultClient
 	}
 
