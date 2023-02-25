@@ -48,6 +48,8 @@ jobs:
       - name: Checkout repository
         id: checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -96,6 +98,7 @@ jobs:
           tag_prefix: "v"
           major_pattern: "(MAJOR)"
           minor_pattern: "(MINOR)"
+          bump_each_commit: true
 
       # If the job is triggered via workflow dispatch and on a master branch, tag branch and latest
       # Otherwise, just tag as the branch name
