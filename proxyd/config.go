@@ -56,6 +56,7 @@ type RateLimitConfig struct {
 type RateLimitMethodOverride struct {
 	Limit    int          `toml:"limit"`
 	Interval TOMLDuration `toml:"interval"`
+	Global   bool         `toml:"global"`
 }
 
 type TOMLDuration time.Duration

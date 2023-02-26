@@ -422,7 +422,7 @@ func (eq *EngineQueue) consolidateNextSafeAttributes(ctx context.Context) error 
 		}
 		return NewTemporaryError(fmt.Errorf("failed to get existing unsafe payload to compare against derived attributes from L1: %w", err))
 	}
-	if err := AttributesMatchBlock(eq.safeAttributes[0], eq.safeHead.Hash, payload); err != nil {
+	if err := AttributesMatchBlock(eq.safeAttributes[0], eq.safeHead.Hash, payload, eq.log); err != nil {
 		eq.log.Warn("L2 reorg: existing unsafe block does not match derived attributes from L1", "err", err)
 		// geth cannot wind back a chain without reorging to a new, previously non-canonical, block
 		return eq.forceNextSafeAttributes(ctx)
@@ -546,6 +546,9 @@ func (eq *EngineQueue) ConfirmPayload(ctx context.Context) (out *eth.ExecutionPa
 }
 
 func (eq *EngineQueue) CancelPayload(ctx context.Context, force bool) error {
+	if eq.buildingID == (eth.PayloadID{}) { // only cancel if there is something to cancel.
+		return nil
+	}
 	// the building job gets wrapped up as soon as the payload is retrieved, there's no explicit cancel in the Engine API
 	eq.log.Error("cancelling old block sealing job", "payload", eq.buildingID)
 	_, err := eq.engine.GetPayload(ctx, eq.buildingID)

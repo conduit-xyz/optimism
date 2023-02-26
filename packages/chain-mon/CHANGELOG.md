@@ -1,5 +1,28 @@
 # @eth-optimism/drippie-mon
 
+## 0.1.3
+
+### Patch Changes
+
+- @eth-optimism/sdk@1.10.4
+
+## 0.1.2
+
+### Patch Changes
+
+- @eth-optimism/sdk@1.10.3
+
+## 0.1.1
+
+### Patch Changes
+
+- 0515a7841: Added withdrawal monitoring to identify proven withdrawals not included in the L2ToL1MessagePasser's sentMessages mapping
+- Updated dependencies [0e179781b]
+- Updated dependencies [5372c9f5b]
+- Updated dependencies [4ae94b412]
+  - @eth-optimism/common-ts@0.8.0
+  - @eth-optimism/sdk@1.10.2
+
 ## 0.4.3
 
 ### Patch Changes
