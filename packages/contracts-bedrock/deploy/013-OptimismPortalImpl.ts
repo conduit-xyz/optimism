@@ -17,7 +17,7 @@ const deployFn: DeployFunction = async (hre) => {
     'L2OutputOracleProxy'
   )
 
-  const finalSystemOwner = hre.deployConfig.finalSystemOwner
+  const finalSystemOwner = hre.deployConfig.portalGuardian || hre.deployConfig.finalSystemOwner
   const finalSystemOwnerCode = await hre.ethers.provider.getCode(
     finalSystemOwner
   )
@@ -53,7 +53,7 @@ const deployFn: DeployFunction = async (hre) => {
       await assertContractVariable(
         contract,
         'GUARDIAN',
-        hre.deployConfig.finalSystemOwner
+        hre.deployConfig.portalGuardian || hre.deployConfig.finalSystemOwner
       )
     },
   })
