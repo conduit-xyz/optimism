@@ -66,9 +66,38 @@ jobs:
       - checkout
       - check-changed:
           patterns: op-bindings,op-chain-ops,packages/
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-v2-{{ checksum "yarn.lock" }}
       - run:
           name: Install dependencies
-          command: yarn && git diff --exit-code
+          command: yarn install && git diff --exit-code
+      - save_cache:
+          name: Save Yarn Package Cache
+          key: yarn-packages-v2-{{ checksum "yarn.lock" }}
+          paths:
+            - "node_modules"
+            - "packages/actor-tests/node_modules"
+            - "packages/atst/node_modules"
+            - "packages/balance-monitor/node_modules"
+            - "packages/chain-mon/node_modules"
+            - "packages/common-ts/node_modules"
+            - "packages/contracts/node_modules"
+            - "packages/contracts-bedrock/node_modules"
+            - "packages/contracts-governance/node_modules"
+            - "packages/contracts-periphery/node_modules"
+            - "packages/core-utils/node_modules"
+            - "packages/data-transport-layer/node_modules"
+            - "packages/drippie-mon/node_modules"
+            - "packages/fault-detector/node_modules"
+            - "packages/hardhat-deploy-config/node_modules"
+            - "packages/integration-tests-bedrock/node_modules"
+            - "packages/message-relayer/node_modules"
+            - "packages/migration-data/node_modules"
+            - "packages/replica-healthcheck/node_modules"
+            - "packages/sdk/node_modules"
+            - "packages/two-step-monitor/node_modules"
       - run:
           name: print forge version
           command: forge --version
@@ -78,8 +107,6 @@ jobs:
       - persist_to_workspace:
           root: "."
           paths:
-            - "node_modules"
-            - "packages/*/node_modules"
             - "packages/*/dist"
             - "packages/*/artifacts"
             - "packages/contracts/src/contract-artifacts.ts"
@@ -163,6 +190,10 @@ jobs:
         description: Docker build context
         type: string
         default: "."
+      docker_target:
+        description: "target build stage"
+        type: string
+        default: ""
       registry:
         description: Docker registry
         type: string
@@ -196,7 +227,7 @@ jobs:
             DOCKER_TAGS=$(echo -ne <<parameters.docker_tags>> | sed "s/,/\n/g" | sed "s/[^a-zA-Z0-9\n]/-/g" | sed -e "s|^|-t ${IMAGE_BASE}:|")
             docker context create buildx-build
             docker buildx create --use buildx-build
-            docker buildx build --platform=<<parameters.platforms>> --push \
+            docker buildx build --platform=<<parameters.platforms>> --target "<<parameters.docker_target>>" --push \
               $(echo -ne $DOCKER_TAGS | tr '\n' ' ') \
               -f <<parameters.docker_file>> \
               <<parameters.docker_context>>
@@ -263,18 +294,12 @@ jobs:
     steps:
       - checkout
       - attach_workspace: { at: "." }
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-v2-{{ checksum "yarn.lock" }}
       - check-changed:
           patterns: contracts-bedrock,hardhat-deploy-config
-      - run:
-          name: lint
-          command: yarn lint:check
-          working_directory: packages/contracts-bedrock
-      - run:
-          name: slither
-          command: |
-            slither --version
-            yarn slither || exit 0
-          working_directory: packages/contracts-bedrock
       - run:
           name: print forge version
           command: forge --version
@@ -291,6 +316,27 @@ jobs:
           command: codecov --verbose --clean --flags contracts-bedrock-tests
           environment:
             FOUNDRY_PROFILE: ci
+
+  contracts-bedrock-checks:
+    docker:
+      - image: ethereumoptimism/ci-builder:latest
+    steps:
+      - checkout
+      - attach_workspace: { at: "." }
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-v2-{{ checksum "yarn.lock" }}
+      - run:
+          name: lint
+          command: yarn lint:check
+          working_directory: packages/contracts-bedrock
+      - run:
+          name: slither
+          command: |
+            slither --version
+            yarn slither || exit 0
+          working_directory: packages/contracts-bedrock
       - run:
           name: gas snapshot
           command: |
@@ -300,16 +346,27 @@ jobs:
             FOUNDRY_PROFILE: ci
           working_directory: packages/contracts-bedrock
       - run:
-          name: validate spacers
-          command: yarn validate-spacers
-          working_directory: packages/contracts-bedrock
-      - run:
           name: storage snapshot
           command: yarn storage-snapshot && git diff --exit-code .storage-layout
           working_directory: packages/contracts-bedrock
       - run:
           name: invariant docs
           command: yarn autogen:invariant-docs && git diff --exit-code ./invariant-docs/*.md
+          working_directory: packages/contracts-bedrock
+
+  contracts-bedrock-validate-spaces:
+    docker:
+      - image: ethereumoptimism/ci-builder:latest
+    steps:
+      - checkout
+      - attach_workspace: { at: "." }
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-v2-{{ checksum "yarn.lock" }}
+      - run:
+          name: validate spacers
+          command: yarn validate-spacers
           working_directory: packages/contracts-bedrock
 
   bedrock-echidna-build:
@@ -345,6 +402,10 @@ jobs:
     steps:
       - checkout
       - attach_workspace: { at: "." }
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-v2-{{ checksum "yarn.lock" }}
       - check-changed:
           patterns: contracts-bedrock,contracts
       - run:
@@ -360,6 +421,10 @@ jobs:
     steps:
       - checkout
       - attach_workspace: { at: "." }
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-v2-{{ checksum "yarn.lock" }}
       - check-changed:
           patterns: contracts-bedrock,op-bindings
       - run:
@@ -385,6 +450,10 @@ jobs:
     steps:
       - checkout
       - attach_workspace: { at: "." }
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-v2-{{ checksum "yarn.lock" }}
       - check-changed:
           patterns: <<parameters.package_name>>,<<parameters.dependencies>>
       - run:
@@ -438,6 +507,10 @@ jobs:
     steps:
       - checkout
       - attach_workspace: { at: "." }
+      - restore_cache:
+          name: Restore Yarn Package Cache
+          keys:
+            - yarn-packages-v2-{{ checksum "yarn.lock" }}
       - check-changed:
           patterns: packages
       # Note: The below needs to be manually configured whenever we
@@ -534,7 +607,7 @@ jobs:
           command: |
             # Note: We don't use circle CI test splits because we need to split by test name, not by package. There is an additional
             # constraint that gotestsum does not currently (nor likely will) accept files from different pacakges when building.
-            OP_TESTLOG_DISABLE_COLOR=true OP_E2E_DISABLE_PARALLEL=true OP_E2E_USE_HTTP=<<parameters.use_http>>  gotestsum \
+            OP_TESTLOG_DISABLE_COLOR=true OP_E2E_DISABLE_PARALLEL=false OP_E2E_USE_HTTP=<<parameters.use_http>>  gotestsum \
             --format=standard-verbose --junitfile=/tmp/test-results/<<parameters.module>>_http_<<parameters.use_http>>.xml \
             -- -timeout=20m ./...
           working_directory: <<parameters.module>>
@@ -845,7 +918,7 @@ jobs:
             ./hive \
             -sim=<<parameters.sim>> \
             -sim.loglevel=5 \
-            -client=go-ethereum,op-geth_optimism-history,op-proposer_<<parameters.version>>,op-batcher_<<parameters.version>>,op-node_<<parameters.version>> |& tee /tmp/hive.log || echo "failed."
+            -client=go-ethereum,op-geth_optimism,op-proposer_<<parameters.version>>,op-batcher_<<parameters.version>>,op-node_<<parameters.version>> |& tee /tmp/hive.log || echo "failed."
       - run:
           command: |
             tar -cvf /tmp/workspace.tgz -C /home/circleci/project /home/circleci/project/workspace
@@ -887,6 +960,12 @@ workflows:
           requires:
             - yarn-monorepo
       - contracts-bedrock-tests:
+          requires:
+            - yarn-monorepo
+      - contracts-bedrock-checks:
+          requires:
+            - yarn-monorepo
+      - contracts-bedrock-validate-spaces:
           requires:
             - yarn-monorepo
       - op-bindings-build:
@@ -1130,6 +1209,14 @@ workflows:
           docker_file: indexer/Dockerfile
           docker_name: indexer
           docker_tags: <<pipeline.git.revision>>,<<pipeline.git.branch>>
+          context:
+            - oplabs-gcr
+      - docker-publish:
+          name: chain-mon-docker-publish
+          docker_file: ./ops/docker/Dockerfile.packages
+          docker_name: chain-mon
+          docker_tags: <<pipeline.git.revision>>,<<pipeline.git.branch>>
+          docker_target: wd-mon
           context:
             - oplabs-gcr
       - hive-test:
