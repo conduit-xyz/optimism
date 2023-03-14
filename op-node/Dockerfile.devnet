@@ -1,4 +1,6 @@
-FROM golang:1.18.0-alpine3.15 as builder
+FROM --platform=$BUILDPLATFORM golang:1.18.0-alpine3.15 as builder
+
+ARG VERSION=v0.0.0
 
 RUN apk add --no-cache make gcc musl-dev linux-headers git jq bash
 
@@ -13,7 +15,11 @@ COPY ./.git /app/.git
 
 WORKDIR /app/op-node
 
-RUN make op-node
+RUN go mod download
+
+ARG TARGETOS TARGETARCH
+
+RUN make op-node VERSION="$VERSION" GOOS=$TARGETOS GOARCH=$TARGETARCH
 
 FROM alpine:3.15
 
@@ -22,7 +28,5 @@ RUN apk add jq
 COPY --from=builder /app/op-node/bin/op-node /usr/local/bin
 COPY ./packages/contracts-bedrock/deploy-config/devnetL1.json .
 COPY ./op-node/generate-devnet-config.sh .
-
-VOLUME ["/config"]
 
 CMD ["./generate-devnet-config.sh"]
