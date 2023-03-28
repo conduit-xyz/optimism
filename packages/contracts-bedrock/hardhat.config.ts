@@ -64,7 +64,6 @@ const config: HardhatUserConfig = {
       url: process.env.L1_RPC || '',
       accounts: [process.env.PRIVATE_KEY_DEPLOYER || ethers.constants.HashZero],
       live: process.env.VERIFY_CONTRACTS === 'true',
-      gcpKmsKeyName: process.env.KMS_KEY_DEPLOYER,
     },
     'mainnet-forked': {
       chainId: 1,
