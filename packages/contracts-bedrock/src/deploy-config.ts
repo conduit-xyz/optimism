@@ -375,7 +375,4 @@ export const deployConfigSpec: {
   governanceTokenOwner: {
     type: 'string',
   },
-  portalGuardian: {
-    type: "string",
-  },
 }
