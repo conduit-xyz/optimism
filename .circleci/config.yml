@@ -61,7 +61,7 @@ jobs:
   yarn-monorepo:
     docker:
       - image: ethereumoptimism/ci-builder:latest
-    resource_class: xlarge
+    resource_class: large
     steps:
       - checkout
       - check-changed:
@@ -142,7 +142,7 @@ jobs:
         default: "oplabs-tools-artifacts/images"
     machine:
       image: ubuntu-2204:2022.07.1
-      resource_class: xlarge
+      resource_class: medium
     steps:
       - checkout
       - run:
@@ -207,7 +207,7 @@ jobs:
         default: "linux/amd64"
     machine:
       image: ubuntu-2204:2022.07.1
-      resource_class: xlarge
+      resource_class: medium
     steps:
       - gcp-oidc-authenticate
       # Below is CircleCI recommended way of specifying nameservers on an Ubuntu box:
@@ -261,7 +261,7 @@ jobs:
         default: "linux/amd64"
     machine:
       image: ubuntu-2204:2022.07.1
-      resource_class: xlarge
+      resource_class: medium
     steps:
       - gcp-cli/install
       - gcp-oidc-authenticate
@@ -379,7 +379,7 @@ jobs:
   contracts-bedrock-slither:
     docker:
       - image: ethereumoptimism/ci-builder:latest
-    resource_class: xlarge
+    resource_class: large
     steps:
       - checkout
       - attach_workspace: { at: "." }
@@ -600,7 +600,7 @@ jobs:
       - run:
           name: run lint
           command: |
-            golangci-lint run -E goimports,sqlclosecheck,bodyclose,asciicheck,misspell,errorlint --timeout 2m -e "errors.As" -e "errors.Is" ./...
+            golangci-lint run -E goimports,sqlclosecheck,bodyclose,asciicheck,misspell,errorlint --timeout 5m -e "errors.As" -e "errors.Is" ./...
           working_directory: <<parameters.module>>
 
   go-test:
@@ -620,7 +620,7 @@ jobs:
           name: run tests
           command: |
             gotestsum --format=standard-verbose --junitfile=/tmp/test-results/<<parameters.module>>.xml \
-            -- -coverpkg=github.com/ethereum-optimism/optimism/... -coverprofile=coverage.out ./...
+            -- -parallel=8 -coverpkg=github.com/ethereum-optimism/optimism/... -coverprofile=coverage.out ./...
           working_directory: <<parameters.module>>
       - run:
           name: upload coverage
@@ -651,9 +651,10 @@ jobs:
           command: |
             # Note: We don't use circle CI test splits because we need to split by test name, not by package. There is an additional
             # constraint that gotestsum does not currently (nor likely will) accept files from different pacakges when building.
-            OP_TESTLOG_DISABLE_COLOR=true OP_E2E_DISABLE_PARALLEL=true OP_E2E_USE_HTTP=<<parameters.use_http>>  gotestsum \
+            # Note: -parallel must be set to match the number of cores in the resource class
+            OP_TESTLOG_DISABLE_COLOR=true OP_E2E_DISABLE_PARALLEL=false OP_E2E_USE_HTTP=<<parameters.use_http>>  gotestsum \
             --format=standard-verbose --junitfile=/tmp/test-results/<<parameters.module>>_http_<<parameters.use_http>>.xml \
-            -- -timeout=20m ./...
+            -- -timeout=20m -parallel=8 ./...
           working_directory: <<parameters.module>>
       - store_test_results:
           path: /tmp/test-results
@@ -899,7 +900,7 @@ jobs:
 
     docker:
       - image: returntocorp/semgrep
-    resource_class: xlarge
+    resource_class: medium
     steps:
       - checkout
       - unless:
@@ -941,7 +942,7 @@ jobs:
     machine:
       image: ubuntu-2204:2022.07.1
       docker_layer_caching: true
-      resource_class: xlarge
+      resource_class: large
     steps:
       - attach_workspace:
           at: /tmp/docker_images
