@@ -3,8 +3,11 @@ package preimage
 import (
 	"bytes"
 	"crypto/rand"
+	"errors"
 	"io"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -19,26 +22,40 @@ func TestHints(t *testing.T) {
 	// Note: pretty much every string is valid communication:
 	// length, payload, 0. Worst case you run out of data, or allocate too much.
 	testHint := func(hints ...string) {
-		var buf bytes.Buffer
-		hw := NewHintWriter(&buf)
-		for _, h := range hints {
-			hw.Hint(rawHint(h))
-		}
-		hr := NewHintReader(&buf)
-		var got []string
-		for i := 0; i < 100; i++ { // sanity limit
-			err := hr.NextHint(func(hint string) error {
-				got = append(got, hint)
-				return nil
-			})
-			if err == io.EOF {
-				break
+		a, b := bidirectionalPipe()
+		var wg sync.WaitGroup
+		wg.Add(2)
+
+		go func() {
+			hw := NewHintWriter(a)
+			for _, h := range hints {
+				hw.Hint(rawHint(h))
 			}
-			require.NoError(t, err)
+			wg.Done()
+		}()
+
+		got := make(chan string, len(hints))
+		go func() {
+			defer wg.Done()
+			hr := NewHintReader(b)
+			for i := 0; i < len(hints); i++ {
+				err := hr.NextHint(func(hint string) error {
+					got <- hint
+					return nil
+				})
+				if err == io.EOF {
+					break
+				}
+				require.NoError(t, err)
+			}
+		}()
+		if waitTimeout(&wg) {
+			t.Error("hint read/write stuck")
 		}
+
 		require.Equal(t, len(hints), len(got), "got all hints")
-		for i, h := range hints {
-			require.Equal(t, h, got[i], "hints match")
+		for _, h := range hints {
+			require.Equal(t, h, <-got, "hints match")
 		}
 	}
 
@@ -71,4 +88,48 @@ func TestHints(t *testing.T) {
 		err := hr.NextHint(func(hint string) error { return nil })
 		require.ErrorIs(t, err, io.ErrUnexpectedEOF)
 	})
+	t.Run("cb error", func(t *testing.T) {
+		a, b := bidirectionalPipe()
+		var wg sync.WaitGroup
+		wg.Add(2)
+
+		go func() {
+			hw := NewHintWriter(a)
+			hw.Hint(rawHint("one"))
+			hw.Hint(rawHint("two"))
+			wg.Done()
+		}()
+		go func() {
+			defer wg.Done()
+			hr := NewHintReader(b)
+			cbErr := errors.New("fail")
+			err := hr.NextHint(func(hint string) error { return cbErr })
+			require.ErrorIs(t, err, cbErr)
+			var readHint string
+			err = hr.NextHint(func(hint string) error {
+				readHint = hint
+				return nil
+			})
+			require.NoError(t, err)
+			require.Equal(t, readHint, "two")
+		}()
+		if waitTimeout(&wg) {
+			t.Error("read/write hint stuck")
+		}
+	})
+}
+
+// waitTimeout returns true iff wg.Wait timed out
+func waitTimeout(wg *sync.WaitGroup) bool {
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+	select {
+	case <-time.After(time.Second * 30):
+		return true
+	case <-done:
+		return false
+	}
 }
