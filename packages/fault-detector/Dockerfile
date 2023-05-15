@@ -1,8 +1,7 @@
-FROM node:19-alpine
+FROM ghcr.io/kahuang/forge-git-scripter-base:latest as base
 
-RUN git clone https://github.com/ethereum-optimism/optimism /app
+RUN git clone https://github.com/conduitxyz/optimism /app
 WORKDIR /app
-RUN chmod 777 -R *
 RUN yarn install --frozen-lockfile && yarn cache clean
 RUN yarn build
 WORKDIR /app/packages/fault-detector
