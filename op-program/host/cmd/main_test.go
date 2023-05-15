@@ -78,6 +78,11 @@ func TestNetwork(t *testing.T) {
 		name := name
 		expected := cfg
 		t.Run("Network_"+name, func(t *testing.T) {
+			// TODO(CLI-3936) Re-enable test for other networks once bedrock migration is complete
+			if name != "goerli" {
+				t.Skipf("Not requiring chain config for network %s", name)
+				return
+			}
 			args := replaceRequiredArg("--network", name)
 			cfg := configForArgs(t, args)
 			require.Equal(t, expected, *cfg.Rollup)
@@ -229,6 +234,28 @@ func TestExec(t *testing.T) {
 		cmd := "/bin/echo"
 		cfg := configForArgs(t, addRequiredArgs("--exec", cmd))
 		require.Equal(t, cmd, cfg.ExecCmd)
+	})
+}
+
+func TestServerMode(t *testing.T) {
+	t.Run("DefaultFalse", func(t *testing.T) {
+		cfg := configForArgs(t, addRequiredArgs())
+		require.False(t, cfg.ServerMode)
+	})
+	t.Run("Enabled", func(t *testing.T) {
+		cfg := configForArgs(t, addRequiredArgs("--server"))
+		require.True(t, cfg.ServerMode)
+	})
+	t.Run("EnabledWithArg", func(t *testing.T) {
+		cfg := configForArgs(t, addRequiredArgs("--server=true"))
+		require.True(t, cfg.ServerMode)
+	})
+	t.Run("DisabledWithArg", func(t *testing.T) {
+		cfg := configForArgs(t, addRequiredArgs("--server=false"))
+		require.False(t, cfg.ServerMode)
+	})
+	t.Run("InvalidArg", func(t *testing.T) {
+		verifyArgsInvalid(t, "invalid boolean value \"foo\" for -server", addRequiredArgs("--server=foo"))
 	})
 }
 
