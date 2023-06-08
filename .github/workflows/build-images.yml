@@ -46,6 +46,9 @@ jobs:
           - IMAGE_NAME: "gcr.io/op-fault-detector"
             DOCKERFILE: "./packages/fault-detector/Dockerfile"
             CONTEXT: "./packages/fault-detector"
+          - IMAGE_NAME: "gcr.io/op-withdrawal-monitor"
+            DOCKERFILE: "./packages/chain-mon/Dockerfile"
+            CONTEXT: "./packages/chain-mon"
 
     steps:
       - name: Checkout repository
