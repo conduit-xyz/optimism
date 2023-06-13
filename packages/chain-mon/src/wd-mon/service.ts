@@ -104,6 +104,10 @@ export class WithdrawalMonitor extends BaseServiceV2<Options, Metrics, State> {
       name: 'L2',
     })
 
+    this.logger.info(`overridden optimism portal address: `, {
+      optimismPortalAddress: this.options.optimismPortalAddress,
+    })
+
     if (this.options.optimismPortalAddress) {
       this.state.messenger = new CrossChainMessenger({
         l1SignerOrProvider: this.options.l1RpcProvider,
