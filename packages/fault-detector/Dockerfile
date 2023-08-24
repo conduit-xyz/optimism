@@ -1,9 +1,7 @@
-FROM node:alpine
+FROM ghcr.io/kahuang/forge-git-scripter-base:latest as base
 
 RUN apk update
 RUN apk add jq
-RUN apk add --no-cache git
-RUN npm install -g pnpm
 
 RUN git clone https://github.com/conduitxyz/optimism /app
 WORKDIR /app
