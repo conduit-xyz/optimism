@@ -5,7 +5,7 @@ RUN apk add jq
 
 RUN git clone https://github.com/conduitxyz/optimism /app
 WORKDIR /app
-RUN yarn install --frozen-lockfile && yarn cache clean
-RUN yarn build
+RUN pnpm install
+RUN pnpm build
 WORKDIR /app/packages/chain-mon
 CMD [""]
