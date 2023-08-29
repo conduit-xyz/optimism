@@ -78,7 +78,7 @@ abstract contract Deployer is Script {
 
         string memory chainIdPath = string.concat(deploymentsDir, "/.chainId");
         try vm.readFile(chainIdPath) returns (string memory chainid) {
-            uint256 chainId = vm.parseUint(chainid);
+            uint256 chainId = vm.parseUint("1");
             require(chainId == block.chainid, "Misconfigured networks");
         } catch {
             vm.writeFile(chainIdPath, vm.toString(block.chainid));
