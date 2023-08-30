@@ -48,24 +48,24 @@ contract PostSherlockL1 is SafeBuilder {
 
     /// @notice Place the contract addresses in storage so they can be used when building calldata.
     function setUp() external {
-        implementations[GOERLI] = ContractSet({
-            L1CrossDomainMessenger: 0x9D1dACf9d9299D17EFFE1aAd559c06bb3Fbf9BC4,
-            L1StandardBridge: 0x022Fc3EBAA3d53F8f9b270CC4ABe1B0e4A406253,
-            L2OutputOracle: 0x0C2b6590De9D61b37094617b5e6f794Ae118176E,
-            OptimismMintableERC20Factory: 0x0EebA1A5da867EB3bc0956f6389d490d0F4b8086,
-            OptimismPortal: 0x9e760aBd847E48A56b4a348Cba56Ae7267FeCE80,
-            SystemConfig: 0x821EE96B88dAA1569F41cD46b0EA87fA89714b45,
-            L1ERC721Bridge: 0x015609dC8cBF8f9947ba571432Bc0d9837c583a4
+        implementations[MAINNET] = ContractSet({
+            L1CrossDomainMessenger: 0x11dd2d9B5ec142dbAFBEFEA82a75985Eae4e12b0,
+            L1StandardBridge: 0x4082C9647c098a6493fb499EaE63b5ce3259c574,
+            L2OutputOracle: 0x909E51211e959339EFb14b36f5A50955a8ae3770,
+            OptimismMintableERC20Factory: 0xD4cD8d08b281492c0Eb9d9B81c27bC62b07Dab65,
+            OptimismPortal: 0x787A0ACaB02437c60Aafb1a29167A3609801e320,
+            SystemConfig: 0xF761Cc49bB127AB666899b41CDC4E62fA50cD9ca,
+            L1ERC721Bridge: 0x2e7d7B188D663F38c2E4fF9C59328458A2D676F0
         });
 
-        proxies[GOERLI] = ContractSet({
-            L1CrossDomainMessenger: 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294,
-            L1StandardBridge: 0x636Af16bf2f682dD3109e60102b8E1A089FedAa8,
-            L2OutputOracle: 0xE6Dfba0953616Bacab0c9A8ecb3a9BBa77FC15c0,
-            OptimismMintableERC20Factory: 0x883dcF8B05364083D849D8bD226bC8Cb4c42F9C5,
-            OptimismPortal: 0x5b47E1A08Ea6d985D6649300584e6722Ec4B1383,
-            SystemConfig: 0xAe851f927Ee40dE99aaBb7461C00f9622ab91d60,
-            L1ERC721Bridge: 0x8DD330DdE8D9898d43b4dc840Da27A07dF91b3c9
+        proxies[MAINNET] = ContractSet({
+            L1CrossDomainMessenger: 0x8CfF5bDb1B428B979E3D87087dA8549A28065DDB,
+            L1StandardBridge: 0x20F1380A78492227A9B2366242335D684aF22507,
+            L2OutputOracle: 0x0af92E6944900abA4B9BAC1417bA13ED6F45c27f,
+            OptimismMintableERC20Factory: 0xD4cD8d08b281492c0Eb9d9B81c27bC62b07Dab65,
+            OptimismPortal: 0x098927F692C86fA1722115652b9d2d7BE8cBa6D3,
+            SystemConfig: 0xA872bca05c9F8A97CC36D879e43B33dB8ed7b69E,
+            L1ERC721Bridge: 0xd5f7A6e644621Bd7a1C95115C1A98f0e11947E8f
         });
     }
 
