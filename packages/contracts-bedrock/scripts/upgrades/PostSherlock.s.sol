@@ -17,7 +17,7 @@ import { Semver } from "../../contracts/universal/Semver.sol";
 contract PostSherlockL1 is SafeBuilder {
 
     /// @notice Address of the ProxyAdmin, passed in via constructor of `run`.
-    ProxyAdmin internal PROXY_ADMIN;
+    ProxyAdmin internal PROXY_ADMIN = ProxyAdmin(0x27ff92b30Cae00dABCF8045cc68fc9dcB67C5019);
 
     /// @notice Represents a set of L1 contracts. Used to represent a set of
     ///         implementations and also a set of proxies.
@@ -38,27 +38,27 @@ contract PostSherlockL1 is SafeBuilder {
     mapping(uint256 => ContractSet) internal proxies;
 
     /// @notice The expected versions for the contracts to be upgraded to.
-    string constant internal L1CrossDomainMessenger_Version = "1.4.0";
-    string constant internal L1StandardBridge_Version = "1.1.0";
-    string constant internal L2OutputOracle_Version = "1.3.0";
-    string constant internal OptimismMintableERC20Factory_Version = "1.1.0";
-    string constant internal OptimismPortal_Version = "1.6.0";
-    string constant internal SystemConfig_Version = "1.3.0";
-    string constant internal L1ERC721Bridge_Version = "1.1.1";
+    string constant internal L1CrossDomainMessenger_Version = "1.4.1";
+    string constant internal L1StandardBridge_Version = "1.1.1";
+    string constant internal L2OutputOracle_Version = "1.3.1";
+    string constant internal OptimismMintableERC20Factory_Version = "1.1.1";
+    string constant internal OptimismPortal_Version = "1.7.2";
+    string constant internal SystemConfig_Version = "1.3.1";
+    string constant internal L1ERC721Bridge_Version = "1.1.2";
 
     /// @notice Place the contract addresses in storage so they can be used when building calldata.
     function setUp() external {
-        implementations[MAINNET] = ContractSet({
+        proxies[MAINNET] = ContractSet({
             L1CrossDomainMessenger: 0x11dd2d9B5ec142dbAFBEFEA82a75985Eae4e12b0,
             L1StandardBridge: 0x4082C9647c098a6493fb499EaE63b5ce3259c574,
             L2OutputOracle: 0x909E51211e959339EFb14b36f5A50955a8ae3770,
-            OptimismMintableERC20Factory: 0xD4cD8d08b281492c0Eb9d9B81c27bC62b07Dab65,
+            OptimismMintableERC20Factory: 0x5DbBa17eb2458A05AbBA79E650dF607F0681Cc6a,
             OptimismPortal: 0x787A0ACaB02437c60Aafb1a29167A3609801e320,
             SystemConfig: 0xF761Cc49bB127AB666899b41CDC4E62fA50cD9ca,
             L1ERC721Bridge: 0x2e7d7B188D663F38c2E4fF9C59328458A2D676F0
         });
 
-        proxies[MAINNET] = ContractSet({
+        implementations[MAINNET] = ContractSet({
             L1CrossDomainMessenger: 0x8CfF5bDb1B428B979E3D87087dA8549A28065DDB,
             L1StandardBridge: 0x20F1380A78492227A9B2366242335D684aF22507,
             L2OutputOracle: 0x0af92E6944900abA4B9BAC1417bA13ED6F45c27f,
@@ -101,12 +101,10 @@ contract PostSherlockL1 is SafeBuilder {
         address _safe;
         address _proxyAdmin;
 
-        if (block.chainid == GOERLI) {
-            _safe = 0xBc1233d0C3e6B5d53Ab455cF65A6623F6dCd7e4f;
-            _proxyAdmin = 0x01d3670863c3F4b24D7b107900f0b75d4BbC6e0d;
-            // Set the proxy admin for the `_postCheck` function
-            PROXY_ADMIN = ProxyAdmin(_proxyAdmin);
-        }
+        _safe = 0x4a4962275DF8C60a80d3a25faEc5AA7De116A746;
+        _proxyAdmin = 0x27ff92b30Cae00dABCF8045cc68fc9dcB67C5019;
+        // Set the proxy admin for the `_postCheck` function
+        PROXY_ADMIN = ProxyAdmin(_proxyAdmin);
 
         require(_safe != address(0) && _proxyAdmin != address(0));
 
