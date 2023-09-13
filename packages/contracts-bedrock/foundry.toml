@@ -28,6 +28,7 @@ fs_permissions = [
   { access='read', path = './forge-artifacts/' },
   { access='write', path='./semver-lock.json' },
 ]
+libs = ["node_modules", "lib"]
 
 [fmt]
 line_length=120
