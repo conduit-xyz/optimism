@@ -298,7 +298,46 @@ func (s *Driver) eventLoop() {
 				s.log.Error("Sequencer critical error", "err", err)
 				return
 			}
-			if s.network != nil && payload != nil {
+
+			var sequencerFencingPostPayloadError error
+			// Pass the execution payload (only if avail) to fencer so can be stored.
+			if s.driverConfig.SequencerFencingPostPayloadEndpoint != "" && payload != nil {
+				sequencerFencingPostPayloadError = func(p any) error {
+					payloadJsonData, err := json.Marshal(payload)
+					if err != nil {
+						s.sequencer.CancelBuildingBlock(ctx)
+						s.log.Error("failed to pass execution payload to fencer, unable to marshal payload")
+						return err
+					}
+
+					fenceCtx, _ := context.WithTimeout(ctx, time.Second)
+					req, err := http.NewRequestWithContext(fenceCtx, http.MethodPost, s.driverConfig.SequencerFencingPostPayloadEndpoint, bytes.NewBuffer(payloadJsonData))
+					if err != nil {
+						s.sequencer.CancelBuildingBlock(ctx)
+						s.log.Error("failed to pass execution payload to fencer, unable to create request")
+						return err
+					}
+
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil {
+						s.sequencer.CancelBuildingBlock(ctx)
+						s.log.Error("failed to pass execution payload to fencer, unable to exec request")
+						return err
+					}
+
+					if resp.StatusCode != 200 {
+						s.sequencer.CancelBuildingBlock(ctx)
+						s.log.Error("failed to pass execution payload to fencer, status code != 200")
+						return err
+					}
+
+					s.log.Debug("successfully passed execution payload to fencer")
+					return nil
+				}(payload)
+			}
+
+			// don't broadcast if error when passing the payload to the fencer
+			if s.network != nil && payload != nil && sequencerFencingPostPayloadError == nil {
 				// Publishing of unsafe data via p2p is optional.
 				// Errors are not severe enough to change/halt sequencing but should be logged and metered.
 				if err := s.network.PublishL2Payload(ctx, payload); err != nil {
