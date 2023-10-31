@@ -97,7 +97,7 @@ type Driver struct {
 func (s *Driver) Start() error {
 	s.derivation.Reset()
 
-	log.Info("Starting driver", "sequencerEnabled", s.driverConfig.SequencerEnabled, "sequencerStopped", s.driverConfig.SequencerStopped, "sequencerFencingCheckEndpoint", s.driverConfig.SequencerFencingCheckEndpoint)
+	log.Info("Starting driver", "sequencerEnabled", s.driverConfig.SequencerEnabled, "sequencerStopped", s.driverConfig.SequencerStopped, "sequencerFencingCheckEndpoint", s.driverConfig.SequencerFencingCheckEndpoint, "sequencerFencingV2CheckEndpoint", s.driverConfig.SequencerFencingV2CheckEndpoint)
 	if s.driverConfig.SequencerEnabled {
 		// Notify the initial sequencer state
 		// This ensures persistence can write the state correctly and that the state file exists
@@ -267,10 +267,19 @@ func (s *Driver) eventLoop() {
 
 		select {
 		case <-sequencerCh:
-			if s.driverConfig.SequencerFencingCheckEndpoint != "" {
+			if s.driverConfig.SequencerFencingV2CheckEndpoint != "" || s.driverConfig.SequencerFencingCheckEndpoint != "" {
 				// Do a fence check to ensure that we're the leader, if this is defined.
+				// If v2 set, pass the block (hash) we're bulding onto.
+				var fencingURL string
+				// v2 fencing takes precedence if set
+				if s.driverConfig.SequencerFencingV2CheckEndpoint != "" {
+					fencingURL = fmt.Sprintf("%s/%s", s.driverConfig.SequencerFencingV2CheckEndpoint, s.sequencer.BuildingOnto().Hash.String())
+				} else {
+					fencingURL = s.driverConfig.SequencerFencingCheckEndpoint
+				}
+
 				fenceCtx, _ := context.WithTimeout(ctx, time.Second)
-				req, err := http.NewRequestWithContext(fenceCtx, "GET", s.driverConfig.SequencerFencingCheckEndpoint, nil)
+				req, err := http.NewRequestWithContext(fenceCtx, "GET", fencingURL, nil)
 				if err != nil {
 					s.sequencer.CancelBuildingBlock(ctx)
 					s.log.Error("failed to check fencing endpoint, unable to sequence")

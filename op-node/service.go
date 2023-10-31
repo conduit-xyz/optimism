@@ -182,6 +182,7 @@ func NewDriverConfig(ctx *cli.Context) *driver.Config {
 		SequencerStopped:                    ctx.Bool(flags.SequencerStoppedFlag.Name),
 		SequencerMaxSafeLag:                 ctx.Uint64(flags.SequencerMaxSafeLagFlag.Name),
 		SequencerFencingCheckEndpoint:       ctx.String(flags.SequencerFencingCheckEndpoint.Name),
+		SequencerFencingV2CheckEndpoint:     ctx.String(flags.SequencerFencingV2CheckEndpoint.Name),
 		SequencerFencingPostPayloadEndpoint: ctx.String(flags.SequencerFencingPostPayloadEndpoint.Name),
 	}
 }

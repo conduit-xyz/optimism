@@ -146,6 +146,13 @@ var (
 		Required: false,
 		Value:    "",
 	}
+	SequencerFencingV2CheckEndpoint = &cli.StringFlag{
+		Name:     "sequencer.fencing-v2-check-endpoint",
+		Usage:    "Optional endpoint that must return 200 when the sequencer should sequence blocks, otherwise return non-200.",
+		EnvVars:  prefixEnvVars("SEQUENCER_FENCING_V2_CHECK_ENDPOINT"),
+		Required: false,
+		Value:    "",
+	}
 	SequencerFencingPostPayloadEndpoint = &cli.StringFlag{
 		Name:     "sequencer.fencing-post-payload-endpoint",
 		Usage:    "Optional endpoint that the sequencer can use when producing a new block to store externally the respective execution payload.",
@@ -296,6 +303,7 @@ var optionalFlags = []cli.Flag{
 	SequencerMaxSafeLagFlag,
 	SequencerL1Confs,
 	SequencerFencingCheckEndpoint,
+	SequencerFencingV2CheckEndpoint,
 	SequencerFencingPostPayloadEndpoint,
 	L1EpochPollIntervalFlag,
 	RuntimeConfigReloadIntervalFlag,

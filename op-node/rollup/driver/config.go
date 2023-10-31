@@ -27,6 +27,12 @@ type Config struct {
 	// The sequencer will reach out to this endpoint with an HTTP GET request and should receive a 200.
 	SequencerFencingCheckEndpoint string `json:"sequencer_fencing_check_endpoint"`
 
+	// SequencerFencingV2CheckEndpoint is an optional endpoint that the sequencer can check when producing a new block to ensure
+	// it has the "right" to produce this block. Useful for scenarios where you are running multiple sequencers with an election
+	// protocol and you want to validate that this sequencer is currently the leader.
+	// The sequencer will reach out to this endpoint with an HTTP GET request and should receive a 200.
+	SequencerFencingV2CheckEndpoint string `json:"sequencer_fencing_v2_check_endpoint"`
+
 	// SequencerFencingPostPayloadEndpoint is an optional endpoint that the sequencer can use when producing a new block to store
 	// externally the respective execution payload. Useful for scenarios where you are running multiple sequencers with an election
 	// protocol and you want to mitigate the risk of forks recovering from an inconsistent state.
