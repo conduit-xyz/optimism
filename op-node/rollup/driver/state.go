@@ -267,41 +267,6 @@ func (s *Driver) eventLoop() {
 
 		select {
 		case <-sequencerCh:
-			if s.driverConfig.SequencerFencingV2CheckEndpoint != "" || s.driverConfig.SequencerFencingCheckEndpoint != "" {
-				// Do a fence check to ensure that we're the leader, if this is defined.
-				// If v2 set, pass the block (hash) we're bulding onto.
-				var fencingURL string
-				// v2 fencing takes precedence if set
-				if s.driverConfig.SequencerFencingV2CheckEndpoint != "" {
-					fencingURL = fmt.Sprintf("%s/%s", s.driverConfig.SequencerFencingV2CheckEndpoint, s.sequencer.BuildingOnto().Hash.String())
-				} else {
-					fencingURL = s.driverConfig.SequencerFencingCheckEndpoint
-				}
-
-				fenceCtx, _ := context.WithTimeout(ctx, time.Second)
-				req, err := http.NewRequestWithContext(fenceCtx, "GET", fencingURL, nil)
-				if err != nil {
-					s.sequencer.CancelBuildingBlock(ctx)
-					s.log.Error("failed to check fencing endpoint, unable to sequence")
-					return
-				}
-
-				resp, err := http.DefaultClient.Do(req)
-				if err != nil {
-					s.sequencer.CancelBuildingBlock(ctx)
-					s.log.Error("failed to check fencing endpoint, unable to sequence")
-					return
-				}
-
-				if resp.StatusCode != 200 {
-					s.sequencer.CancelBuildingBlock(ctx)
-					s.log.Error("failed to check fencing endpoint, unable to sequence")
-					return
-				}
-
-				s.log.Debug("successfully checked fencing endpoint")
-			}
-
 			payload, err := s.sequencer.RunNextSequencerAction(ctx)
 			if err != nil {
 				s.log.Error("Sequencer critical error", "err", err)

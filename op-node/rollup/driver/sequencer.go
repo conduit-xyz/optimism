@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -29,6 +30,11 @@ type SequencerMetrics interface {
 	RecordSequencerReset()
 }
 
+type SequencerFencingConfig struct {
+	SequencerFencingCheckEndpoint   string
+	SequencerFencingV2CheckEndpoint string
+}
+
 // Sequencer implements the sequencing interface of the driver: it starts and completes block building jobs.
 type Sequencer struct {
 	log    log.Logger
@@ -41,13 +47,15 @@ type Sequencer struct {
 
 	metrics SequencerMetrics
 
+	fencingConfig SequencerFencingConfig
+
 	// timeNow enables sequencer testing to mock the time
 	timeNow func() time.Time
 
 	nextAction time.Time
 }
 
-func NewSequencer(log log.Logger, cfg *rollup.Config, engine derive.ResettableEngineControl, attributesBuilder derive.AttributesBuilder, l1OriginSelector L1OriginSelectorIface, metrics SequencerMetrics) *Sequencer {
+func NewSequencer(log log.Logger, cfg *rollup.Config, engine derive.ResettableEngineControl, attributesBuilder derive.AttributesBuilder, l1OriginSelector L1OriginSelectorIface, metrics SequencerMetrics, fencingConfig SequencerFencingConfig) *Sequencer {
 	return &Sequencer{
 		log:              log,
 		config:           cfg,
@@ -56,12 +64,43 @@ func NewSequencer(log log.Logger, cfg *rollup.Config, engine derive.ResettableEn
 		attrBuilder:      attributesBuilder,
 		l1OriginSelector: l1OriginSelector,
 		metrics:          metrics,
+		fencingConfig:    fencingConfig,
 	}
 }
 
 // StartBuildingBlock initiates a block building job on top of the given L2 head, safe and finalized blocks, and using the provided l1Origin.
 func (d *Sequencer) StartBuildingBlock(ctx context.Context) error {
 	l2Head := d.engine.UnsafeL2Head()
+
+	// Do a fence check to ensure that we're building on the latest l2 head
+	if d.fencingConfig.SequencerFencingV2CheckEndpoint != "" {
+		fenceCtx, _ := context.WithTimeout(ctx, time.Second)
+		fencingURL := fmt.Sprintf("%s/%s", d.fencingConfig.SequencerFencingV2CheckEndpoint, l2Head.Hash.String())
+		req, err := http.NewRequestWithContext(fenceCtx, "GET", fencingURL, nil)
+		if err != nil {
+			d.CancelBuildingBlock(ctx)
+			err = errors.New("failed to check fencing endpoint, unable to sequence")
+			d.log.Error(err.Error())
+			return err
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			d.CancelBuildingBlock(ctx)
+			err = errors.New("failed to check fencing endpoint, unable to sequence")
+			d.log.Error(err.Error())
+			return err
+		}
+
+		if resp.StatusCode != 200 {
+			d.CancelBuildingBlock(ctx)
+			err = errors.New("failed to check fencing endpoint, unable to sequence")
+			d.log.Error(err.Error())
+			return err
+		}
+
+		d.log.Debug("successfully checked fencing endpoint")
+	}
 
 	// Figure out which L1 origin block we're going to be building on top of.
 	l1Origin, err := d.l1OriginSelector.FindL1Origin(ctx, l2Head)
@@ -197,6 +236,35 @@ func (d *Sequencer) BuildingOnto() eth.L2BlockRef {
 // but the derivation can continue to reset until the chain is correct.
 // If the engine is currently building safe blocks, then that building is not interrupted, and sequencing is delayed.
 func (d *Sequencer) RunNextSequencerAction(ctx context.Context) (*eth.ExecutionPayload, error) {
+	// Do a fence check to ensure that we're the leader, if this is defined.
+	if d.fencingConfig.SequencerFencingCheckEndpoint != "" {
+		fenceCtx, _ := context.WithTimeout(ctx, time.Second)
+		req, err := http.NewRequestWithContext(fenceCtx, "GET", d.fencingConfig.SequencerFencingCheckEndpoint, nil)
+		if err != nil {
+			d.CancelBuildingBlock(ctx)
+			err = errors.New("failed to check fencing endpoint, unable to sequence")
+			d.log.Error(err.Error())
+			return nil, err
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			d.CancelBuildingBlock(ctx)
+			err = errors.New("failed to check fencing endpoint, unable to sequence")
+			d.log.Error(err.Error())
+			return nil, err
+		}
+
+		if resp.StatusCode != 200 {
+			d.CancelBuildingBlock(ctx)
+			err = errors.New("failed to check fencing endpoint, unable to sequence")
+			d.log.Error(err.Error())
+			return nil, err
+		}
+
+		d.log.Debug("successfully checked fencing endpoint")
+	}
+
 	if onto, buildingID, safe := d.engine.BuildingPayload(); buildingID != (eth.PayloadID{}) {
 		if safe {
 			d.log.Warn("avoiding sequencing to not interrupt safe-head changes", "onto", onto, "onto_time", onto.Time)

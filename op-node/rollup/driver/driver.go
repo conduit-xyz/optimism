@@ -124,7 +124,10 @@ func NewDriver(driverCfg *Config, cfg *rollup.Config, l2 L2Chain, l1 L1Chain, al
 	attrBuilder := derive.NewFetchingAttributesBuilder(cfg, l1, l2)
 	engine := derivationPipeline
 	meteredEngine := NewMeteredEngine(cfg, engine, metrics, log)
-	sequencer := NewSequencer(log, cfg, meteredEngine, attrBuilder, findL1Origin, metrics)
+	sequencer := NewSequencer(log, cfg, meteredEngine, attrBuilder, findL1Origin, metrics, SequencerFencingConfig{
+		SequencerFencingCheckEndpoint:   driverCfg.SequencerFencingCheckEndpoint,
+		SequencerFencingV2CheckEndpoint: driverCfg.SequencerFencingV2CheckEndpoint,
+	})
 
 	return &Driver{
 		l1State:          l1State,
