@@ -1,0 +1,121 @@
+[
+    {
+        "contractName": "LegacyMessagePasser",
+        "contractAddress": "0x4200000000000000000000000000000000000000",
+        "introduced": "Legacy",
+        "deprecated": true,
+        "proxied": true
+    },
+    {
+        "contractName": "DeployerWhitelist",
+        "contractAddress": "0x4200000000000000000000000000000000000002",
+        "introduced": "Legacy",
+        "deprecated": true,
+        "proxied": true
+    },
+    {
+        "contractName": "LegacyERC20ETH",
+        "contractAddress": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000",
+        "introduced": "Legacy",
+        "deprecated": true,
+        "proxied": false
+    },
+    {
+        "contractName": "WETH9",
+        "contractAddress": "0x4200000000000000000000000000000000000006",
+        "introduced": "Legacy",
+        "deprecated": false,
+        "proxied": false
+    },
+    {
+        "contractName": "L2CrossDomainMessenger",
+        "contractAddress": "0x4200000000000000000000000000000000000007",
+        "introduced": "Legacy",
+        "deprecated": false,
+        "proxied": true
+    },
+    {
+        "contractName": "L2StandardBridge",
+        "contractAddress": "0x4200000000000000000000000000000000000010",
+        "introduced": "Legacy",
+        "deprecated": false,
+        "proxied": true
+    },
+    {
+        "contractName": "SequencerFeeVault",
+        "contractAddress": "0x4200000000000000000000000000000000000011",
+        "introduced": "Legacy",
+        "deprecated": false,
+        "proxied": true
+    },
+    {
+        "contractName": "OptimismMintableERC20Factory",
+        "contractAddress": "0x4200000000000000000000000000000000000012",
+        "introduced": "Legacy",
+        "deprecated": false,
+        "proxied": true
+    },
+    {
+        "contractName": "L1BlockNumber",
+        "contractAddress": "0x4200000000000000000000000000000000000013",
+        "introduced": "Legacy",
+        "deprecated": true,
+        "proxied": true
+    },
+    {
+        "contractName": "GasPriceOracle",
+        "contractAddress": "0x420000000000000000000000000000000000000F",
+        "introduced": "Legacy",
+        "deprecated": false,
+        "proxied": true
+    },
+    {
+        "contractName": "GovernanceToken",
+        "contractAddress": "0x4200000000000000000000000000000000000042",
+        "introduced": "Legacy",
+        "deprecated": false,
+        "proxied": false
+    },
+    {
+        "contractName": "L1Block",
+        "contractAddress": "0x4200000000000000000000000000000000000015",
+        "introduced": "Bedrock",
+        "deprecated": false,
+        "proxied": true
+    },
+    {
+        "contractName": "L2ToL1MessagePasser",
+        "contractAddress": "0x4200000000000000000000000000000000000016",
+        "introduced": "Bedrock",
+        "deprecated": false,
+        "proxied": true
+    },
+    {
+        "contractName": "L2ERC721Bridge",
+        "contractAddress": "0x4200000000000000000000000000000000000014",
+        "introduced": "Legacy",
+        "deprecated": false,
+        "proxied": true
+    },
+    {
+        "contractName": "OptimismMintableERC721Factory",
+        "contractAddress": "0x4200000000000000000000000000000000000017",
+        "introduced": "Bedrock",
+        "deprecated": false,
+        "proxied": true
+    },
+    {
+        "contractName": "BaseFeeVault",
+        "contractAddress": "0x4200000000000000000000000000000000000019",
+        "introduced": "Bedrock",
+        "deprecated": false,
+        "proxied": true
+    },
+    {
+        "contractName": "L1FeeVault",
+        "contractAddress": "0x420000000000000000000000000000000000001a",
+        "introduced": "Bedrock",
+        "deprecated": false,
+        "proxied": true
+    }
+]
