@@ -63,6 +63,7 @@ func TestBuildOptimism(t *testing.T) {
 		"L2ERC721Bridge":                true,
 		"OptimismMintableERC721Factory": true,
 		"LegacyERC20ETH":                true,
+		"Create2Deployer":               true,
 	}
 
 	// Only the exact contracts that we care about are being

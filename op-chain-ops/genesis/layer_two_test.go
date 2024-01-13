@@ -66,6 +66,10 @@ func testBuildL2Genesis(t *testing.T, config *genesis.DeployConfig) *core.Genesi
 		}
 	}
 
+	create2Deployer := gen.Alloc[common.HexToAddress("0x13b0D85CcB8bf860b6b79AF3029fCA081AE9beF2")]
+	codeHash := crypto.Keccak256Hash(create2Deployer.Code)
+	require.Equal(t, codeHash, common.HexToHash("0xb0550b5b431e30d38000efb7107aaa0ade03d48a7198a140edda9d27134468b2"))
+
 	if writeFile {
 		file, _ := json.MarshalIndent(gen, "", " ")
 		_ = os.WriteFile("genesis.json", file, 0644)
