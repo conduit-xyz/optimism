@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum-optimism/optimism/op-bindings/bindings"
+	"github.com/ethereum-optimism/optimism/op-service/eth"
 
 	"github.com/ethereum-optimism/optimism/op-chain-ops/immutables"
 	"github.com/ethereum-optimism/optimism/op-chain-ops/state"
@@ -47,7 +48,7 @@ func setProxies(db vm.StateDB, proxyAdminAddr common.Address, namespace *big.Int
 		}
 
 		db.SetCode(addr, depBytecode)
-		db.SetState(addr, AdminSlot, proxyAdminAddr.Hash())
+		db.SetState(addr, AdminSlot, eth.AddressAsLeftPaddedHash(proxyAdminAddr))
 		log.Trace("Set proxy", "address", addr, "admin", proxyAdminAddr)
 	}
 

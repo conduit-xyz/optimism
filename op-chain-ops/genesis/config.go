@@ -20,6 +20,8 @@ import (
 	"github.com/ethereum-optimism/optimism/op-chain-ops/state"
 	"github.com/ethereum-optimism/optimism/op-node/eth"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
+
+	eth2 "github.com/ethereum-optimism/optimism/op-service/eth"
 )
 
 var (
@@ -483,7 +485,7 @@ func NewL2StorageConfig(config *DeployConfig, block *types.Block) (state.Storage
 		"basefee":        block.BaseFee(),
 		"hash":           block.Hash(),
 		"sequenceNumber": 0,
-		"batcherHash":    config.BatchSenderAddress.Hash(),
+		"batcherHash":    eth2.AddressAsLeftPaddedHash(config.BatchSenderAddress),
 		"l1FeeOverhead":  config.GasPriceOracleOverhead,
 		"l1FeeScalar":    config.GasPriceOracleScalar,
 	}

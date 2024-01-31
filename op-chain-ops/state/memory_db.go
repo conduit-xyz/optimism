@@ -26,9 +26,21 @@ type MemoryStateDB struct {
 	genesis *core.Genesis
 }
 
+func (db *MemoryStateDB) SelfDestruct(common.Address) {
+	panic("SelfDestruct unimplemented")
+}
+
+func (db *MemoryStateDB) HasSelfDestructed(common.Address) bool {
+	panic("HasSelfDestructed unimplemented")
+}
+
+func (db *MemoryStateDB) Selfdestruct6780(common.Address) {
+	panic("Selfdestruct6780 unimplemented")
+}
+
 func NewMemoryStateDB(genesis *core.Genesis) *MemoryStateDB {
 	if genesis == nil {
-		genesis = core.DeveloperGenesisBlock(15, 15_000_000, common.Address{})
+		genesis = core.DeveloperGenesisBlock(15_000_000, common.Address{})
 	}
 
 	return &MemoryStateDB{

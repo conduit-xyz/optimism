@@ -10,6 +10,7 @@ import (
 	"github.com/ethereum-optimism/optimism/op-bindings/predeploys"
 	"github.com/ethereum-optimism/optimism/op-chain-ops/immutables"
 	"github.com/ethereum-optimism/optimism/op-chain-ops/state"
+	"github.com/ethereum-optimism/optimism/op-service/eth"
 )
 
 // BuildL2DeveloperGenesis will build the L2 genesis block.
@@ -60,7 +61,7 @@ func BuildL2Genesis(config *DeployConfig, l1StartBlock *types.Block) (*core.Gene
 				return nil, fmt.Errorf("error converting to code namespace: %w", err)
 			}
 			db.CreateAccount(codeAddr)
-			db.SetState(addr, ImplementationSlot, codeAddr.Hash())
+			db.SetState(addr, ImplementationSlot, eth.AddressAsLeftPaddedHash(codeAddr))
 		} else if db.Exist(addr) {
 			db.DeleteState(addr, AdminSlot)
 		}
