@@ -644,7 +644,7 @@ func NewDeployConfig(path string) (*DeployConfig, error) {
 	}
 
 	dec := json.NewDecoder(bytes.NewReader(file))
-	dec.DisallowUnknownFields()
+	//dec.DisallowUnknownFields()
 
 	var config DeployConfig
 	if err := dec.Decode(&config); err != nil {
