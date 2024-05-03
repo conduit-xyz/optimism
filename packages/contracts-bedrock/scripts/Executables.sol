@@ -12,4 +12,10 @@ library Executables {
     string internal constant sed = "sed";
     string internal constant find = "find";
     string internal constant ls = "ls";
+    string internal constant git = "git";
+
+    /// @notice Returns the commit hash of HEAD.
+    function gitCommitHash() internal returns (string memory) {
+        return "asdf";
+    }
 }
