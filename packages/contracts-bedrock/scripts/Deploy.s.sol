@@ -245,6 +245,22 @@ contract Deploy is Deployer {
         }
     }
 
+    /// @notice Transfer ownership of the ProxyAdmin contract to the final system owner
+    function transferProxyAdminToFinalSystemOwner() public broadcast {
+        ProxyAdmin proxyAdmin = ProxyAdmin(mustGetAddress("ProxyAdmin"));
+        address owner = proxyAdmin.owner();
+        address finalSystemOwner = cfg.finalSystemOwner();
+        Safe safe = Safe(mustGetAddress("SystemOwnerSafe"));
+        if (owner != finalSystemOwner) {
+            _callViaSafe({
+                _safe: safe,
+                _target: address(proxyAdmin),
+                _data: abi.encodeCall(ProxyAdmin.transferOwnership, (finalSystemOwner))
+            });
+            console.log("ProxyAdmin ownership transferred to Final SystemOwner at: %s", finalSystemOwner);
+        }
+    }
+
     /// @notice Transfer ownership of a Proxy to the ProxyAdmin contract
     ///         This is expected to be used in conjusting with deployERC1967ProxyWithOwner after setup actions
     ///         have been performed on the proxy.
@@ -340,6 +356,7 @@ contract Deploy is Deployer {
 
         transferDisputeGameFactoryOwnership();
         transferDelayedWETHOwnership();
+        transferProxyAdminToFinalSystemOwner();
     }
 
     /// @notice Deploy all of the proxies
@@ -454,7 +471,7 @@ contract Deploy is Deployer {
         );
         addr_ = address(
             safeProxyFactory.createProxyWithNonce(
-                address(safeSingleton), initData, uint256(keccak256(abi.encode(_name)))
+                address(safeSingleton), initData, uint256(keccak256(abi.encode(_implSalt())))
             )
         );
 
