@@ -12,6 +12,7 @@ import { GnosisSafeProxyFactory as SafeProxyFactory } from "safe-contracts/proxi
 import { Enum as SafeOps } from "safe-contracts/common/Enum.sol";
 
 import { Deployer } from "scripts/Deployer.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 import { ProxyAdmin } from "src/universal/ProxyAdmin.sol";
 import { AddressManager } from "src/legacy/AddressManager.sol";
@@ -245,6 +246,22 @@ contract Deploy is Deployer {
         }
     }
 
+    /// @notice Transfer ownership of the ProxyAdmin contract to the final system owner
+    function transferProxyAdminToFinalSystemOwner() public broadcast {
+        ProxyAdmin proxyAdmin = ProxyAdmin(mustGetAddress("ProxyAdmin"));
+        address owner = proxyAdmin.owner();
+        address finalSystemOwner = cfg.finalSystemOwner();
+        Safe safe = Safe(mustGetAddress("SystemOwnerSafe"));
+        if (owner != finalSystemOwner) {
+            _callViaSafe({
+                _safe: safe,
+                _target: address(proxyAdmin),
+                _data: abi.encodeCall(Ownable.transferOwnership, (finalSystemOwner))
+            });
+            console.log("ProxyAdmin ownership transferred to Final SystemOwner at: %s", finalSystemOwner);
+        }
+    }
+
     /// @notice Transfer ownership of a Proxy to the ProxyAdmin contract
     ///         This is expected to be used in conjusting with deployERC1967ProxyWithOwner after setup actions
     ///         have been performed on the proxy.
@@ -340,6 +357,7 @@ contract Deploy is Deployer {
 
         transferDisputeGameFactoryOwnership();
         transferDelayedWETHOwnership();
+        transferProxyAdminToFinalSystemOwner();
     }
 
     /// @notice Deploy all of the proxies
