@@ -340,6 +340,82 @@ contract OptimismPortal_Test is CommonTest {
         vm.expectRevert(stdError.indexOOBError);
         assertEq(optimismPortal.isOutputFinalized(nextOutputIndex + 1), false);
     }
+
+    /// @dev Tests that the gas paying token can be set.
+    function testFuzz_setGasPayingToken_succeeds(
+        address _token,
+        uint8 _decimals,
+        bytes32 _name,
+        bytes32 _symbol
+    )
+        external
+    {
+        vm.expectEmit(address(optimismPortal));
+        emit TransactionDeposited(
+            0xDeaDDEaDDeAdDeAdDEAdDEaddeAddEAdDEAd0001,
+            Predeploys.L1_BLOCK_ATTRIBUTES,
+            0,
+            abi.encodePacked(
+                uint256(0), // mint
+                uint256(0), // value
+                uint64(200_000), // gasLimit
+                false, // isCreation,
+                abi.encodeCall(L1Block.setGasPayingToken, (_token, _decimals, _name, _symbol))
+            )
+        );
+
+        vm.prank(address(systemConfig));
+        optimismPortal.setGasPayingToken({ _token: _token, _decimals: _decimals, _name: _name, _symbol: _symbol });
+    }
+
+    /// @dev Tests that the gas paying token cannot be set by a non-system config.
+    function test_setGasPayingToken_notSystemConfig_fails(address _caller) external {
+        vm.assume(_caller != address(systemConfig));
+        vm.prank(_caller);
+        vm.expectRevert(Unauthorized.selector);
+        optimismPortal.setGasPayingToken({ _token: address(0), _decimals: 0, _name: "", _symbol: "" });
+    }
+
+    /// @dev Tests that `depositERC20Transaction` reverts when the gas paying token is ether.
+    function test_depositERC20Transaction_noCustomGasToken_reverts() external {
+        // Check that the gas paying token is set to ether
+        (address token,) = systemConfig.gasPayingToken();
+        assertEq(token, Constants.ETHER);
+
+        vm.expectRevert(OnlyCustomGasToken.selector);
+        optimismPortal.depositERC20Transaction(address(0), 0, 0, 0, false, "");
+    }
+
+    function test_depositERC20Transaction_balanceOverflow_reverts() external {
+        vm.mockCall(address(systemConfig), abi.encodeWithSignature("gasPayingToken()"), abi.encode(address(42), 18));
+
+        // The balance slot
+        vm.store(address(optimismPortal), bytes32(uint256(61)), bytes32(type(uint256).max));
+        assertEq(optimismPortal.balance(), type(uint256).max);
+
+        vm.expectRevert(stdError.arithmeticError);
+        optimismPortal.depositERC20Transaction({
+            _to: address(0),
+            _mint: 1,
+            _value: 1,
+            _gasLimit: 10_000,
+            _isCreation: false,
+            _data: ""
+        });
+    }
+
+    /// @dev Tests that `balance()` returns the correct balance when the gas paying token is ether.
+    function testFuzz_balance_ether_succeeds(uint256 _amount) external {
+        // Check that the gas paying token is set to ether
+        (address token,) = systemConfig.gasPayingToken();
+        assertEq(token, Constants.ETHER);
+
+        // Increase the balance of the gas paying token
+        vm.deal(address(optimismPortal), _amount);
+
+        // Check that the balance has been correctly updated
+        assertEq(optimismPortal.balance(), address(optimismPortal).balance);
+    }
 }
 
 contract OptimismPortal_FinalizeWithdrawal_Test is CommonTest {

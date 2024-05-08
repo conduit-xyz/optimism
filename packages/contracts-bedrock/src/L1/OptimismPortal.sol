@@ -38,6 +38,9 @@ contract OptimismPortal is Initializable, ResourceMetering, ISemver {
     /// @notice The L2 gas limit set when eth is deposited using the receive() function.
     uint64 internal constant RECEIVE_DEFAULT_GAS_LIMIT = 100_000;
 
+    /// @notice The L2 gas limit for system deposit transactions that are initiated from L1.
+    uint32 internal constant SYSTEM_DEPOSIT_GAS_LIMIT = 200_000;
+
     /// @notice Address of the L2 account which initiated a withdrawal in this transaction.
     ///         If the of this variable is the default L2 sender address, then we are NOT inside of
     ///         a call to finalizeWithdrawalTransaction.
@@ -92,8 +95,13 @@ contract OptimismPortal is Initializable, ResourceMetering, ISemver {
     }
 
     /// @notice Semantic version.
+<<<<<<< HEAD
     /// @custom:semver 2.6.0
     string public constant version = "2.6.0";
+=======
+    /// @custom:semver 2.8.0
+    string public constant version = "2.8.0";
+>>>>>>> 0cdf179c1 (contracts-bedrock: fix deposit gas limit)
 
     /// @notice Constructs the OptimismPortal contract.
     constructor() {
