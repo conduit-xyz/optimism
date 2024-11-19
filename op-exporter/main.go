@@ -61,6 +61,10 @@ var (
 		"gaseBaseFee.enable",
 		"Enable gaseBaseFee info lookup.",
 	).Default("false").Bool()
+	enableGasUsedCounter = kingpin.Flag(
+		"gasUsedCounter.enable",
+		"Enable gasUsedCounter lookup.",
+	).Default("false").Bool()
 )
 
 type healthCheck struct {
@@ -126,6 +130,10 @@ func main() {
 
 	if *enableGasBaseFee {
 		go getBaseFee()
+	}
+
+	if *enableGasUsedCounter {
+		go getGasUsedCounter()
 	}
 
 	if *enableK8sQuery {
@@ -248,6 +256,50 @@ func getBaseFee() {
 		}
 		time.Sleep(time.Duration(*sequencerPollingSeconds) * time.Second)
 
+	}
+}
+
+func getGasUsedCounter() {
+	rpcClient := jsonrpc.NewClientWithOpts(*rpcProvider, &jsonrpc.RPCClientOpts{})
+	var latestBlockNumber uint64 = 0
+	for {
+		var chainHeadBlockNumber string
+		if err := rpcClient.CallFor(&chainHeadBlockNumber, "eth_blockNumber"); err != nil {
+			log.Errorln("Error fetching chain head block number", err)
+			time.Sleep(time.Duration(*sequencerPollingSeconds) * time.Second)
+			continue
+		}
+		chainHead, err := hexutil.DecodeUint64(chainHeadBlockNumber)
+		if err != nil {
+			log.Errorln("Error decoding chain head block number", chainHeadBlockNumber)
+			time.Sleep(time.Duration(*sequencerPollingSeconds) * time.Second)
+			continue
+		}
+		if latestBlockNumber == 0 {
+			latestBlockNumber = chainHead
+		}
+		for latestBlockNumber <= chainHead {
+			var getBlockByNumbeResponse *getBlockByNumberResponse
+			blockNumberHex := hexutil.EncodeUint64(latestBlockNumber)
+			if err := rpcClient.CallFor(&getBlockByNumbeResponse, "eth_getBlockByNumber", blockNumberHex, false); err != nil {
+				log.Errorln("Error calling eth_getBlockByNumber for block", blockNumberHex, err)
+				break
+			}
+			if getBlockByNumbeResponse == nil {
+				log.Warnln("Block not found for number:", blockNumberHex)
+				break
+			}
+			log.Infoln("Got block by number response: ", *getBlockByNumbeResponse)
+			gasUsed, err := hexutil.DecodeUint64(getBlockByNumbeResponse.GasUsed)
+			if err != nil {
+				log.Warnln("Error converting gasUsed " + getBlockByNumbeResponse.GasUsed)
+			}
+			gasUsedCounter.WithLabelValues(*networkLabel, "layer2").Add(float64(gasUsed))
+
+			latestBlockNumber++
+		}
+
+		time.Sleep(time.Duration(*sequencerPollingSeconds) * time.Second)
 	}
 }
 

@@ -4,7 +4,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-//Define the metrics we wish to expose
+// Define the metrics we wish to expose
 var (
 	gasBaseFeeMetric = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -14,6 +14,12 @@ var (
 	)
 	gasUsedMetric = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
+			Name: "op_gasUsed",
+			Help: "Gas Used."},
+		[]string{"network", "layer"},
+	)
+	gasUsedCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
 			Name: "op_gasUsed",
 			Help: "Gas Used."},
 		[]string{"network", "layer"},
