@@ -26,4 +26,9 @@ FROM alpine:3.16
 
 COPY --from=builder /app/op-proposer/bin/op-proposer /usr/local/bin
 
+RUN addgroup -g 60000 -S conduit && \
+    adduser  -u 60000 -S -G conduit -h /conduit conduit
+
+USER conduit:conduit
+
 CMD ["op-proposer"]
